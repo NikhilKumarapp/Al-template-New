@@ -1,0 +1,265 @@
+name: Create a new Release/Tag #git
+
+run-name: "Create a new Release/Tag - Version [${{ inputs.tag }}]"
+ 
+on:
+
+  push:
+
+    branches:
+
+      - main
+
+    paths:
+
+      - '**/*.app'
+
+      - '**/*.al'
+
+      - 'app.json'
+
+      - '.github/workflows/**'
+ 
+permissions:
+
+  contents: write
+
+  packages: read
+ 
+jobs:
+
+  release:
+
+    name: Auto Tag & Create Release
+
+    runs-on: ubuntu-latest
+ 
+    outputs:
+
+      version_changed: ${{ steps.version_check.outputs.version_changed }}
+
+      new_tag: ${{ steps.version_check.outputs.new_tag }}
+ 
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v3
+
+        with:
+
+          fetch-depth: 0
+
+          token: ${{ secrets.GITHUB_TOKEN }}
+ 
+      - name: Set up Git
+
+        run: |
+
+          git config user.name "github-actions[bot]"
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+ 
+      - name: Read app version from app.json
+
+        id: check_changes
+
+        run: |
+
+          if [ -f "app.json" ]; then
+
+            APP_VERSION=$(jq -r '.version' app.json)
+
+            echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
+
+            echo "Found app version: $APP_VERSION"
+
+          else
+
+            echo "::error::app.json not found"
+
+            exit 1
+
+          fi
+ 
+      - name: Get Latest Tag
+
+        id: get_tag
+
+        run: |
+
+          if git tag -l | grep -q .; then
+
+            TAG=$(git describe --tags --abbrev=0 || echo "")
+
+            echo "Found latest tag: $TAG"
+
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+
+          else
+
+            TAG=""
+
+            echo "No tags found"
+
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+
+          fi
+
+          echo "latest_tag=$TAG" >> $GITHUB_OUTPUT
+ 
+      - name: Compare Version with Latest Tag
+
+        id: version_check
+
+        run: |
+
+          APP_VERSION=${{ steps.check_changes.outputs.app_version }}
+
+          LATEST_TAG=${{ steps.get_tag.outputs.latest_tag }}
+
+          NEW_TAG="v$APP_VERSION"
+ 
+          if [ "$NEW_TAG" != "$LATEST_TAG" ]; then
+
+            echo "Version changed: $LATEST_TAG -> $NEW_TAG"
+
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+
+            echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+          else
+
+            echo "No version change detected"
+
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+
+            echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+          fi
+ 
+      - name: Create and Push New Tag
+
+        if: steps.version_check.outputs.version_changed == 'true'
+
+        run: |
+
+          git tag ${{ steps.version_check.outputs.new_tag }}
+
+          git push origin ${{ steps.version_check.outputs.new_tag }}
+
+          echo "✅ Created and pushed new tag: ${{ steps.version_check.outputs.new_tag }}"
+ 
+      - name: Zip AL App Files
+
+        id: find_app
+
+        if: steps.version_check.outputs.version_changed == 'true'
+
+        run: |
+          # Ensure required directories exist
+          mkdir -p ./output ./build ./dist ./release_temp
+
+          echo "Searching for .app files in directories: ./output, ./build, ./dist, ."
+
+          # Log all files in the relevant directories
+          for dir in ./output ./build ./dist .; do
+            echo "Available files in $dir:"
+            ls -R "$dir" || echo "Directory $dir does not exist or is empty."
+          done
+
+          # Search for .app files
+          APP_FILES=$(find ./output ./build ./dist . -type f -name "*.app" ! -path "*/node_modules/*" 2>/dev/null)
+
+          if [ -z "$APP_FILES" ]; then
+            echo "::error::No .app files found for release! Please check your build pipeline or directory structure."
+            exit 1
+          else
+            echo "Found the following .app files:"
+            echo "$APP_FILES"
+            # Use quotes to handle spaces in file paths
+            echo "$APP_FILES" | xargs -I {} zip -j release_temp/al-app-files.zip "{}"
+            echo "app_files=release_temp/al-app-files.zip" >> $GITHUB_OUTPUT
+            echo "Zipped app files into release_temp/al-app-files.zip"
+          fi
+ 
+      - name: Generate Release Notes
+
+        id: release_notes
+
+        if: steps.version_check.outputs.version_changed == 'true' && steps.find_app.outputs.app_files != ''
+
+        run: |
+
+          echo "## Release ${{ steps.version_check.outputs.new_tag }}" > release_notes.md
+
+          echo "" >> release_notes.md
+
+          if [[ "${{ steps.get_tag.outputs.tag_exists }}" == "false" ]]; then
+
+            echo "Initial release" >> release_notes.md
+
+            echo "" >> release_notes.md
+
+            echo "### Commits" >> release_notes.md
+
+            git log --pretty=format:"* %s" >> release_notes.md
+
+          else
+
+            PREVIOUS_TAG=${{ steps.get_tag.outputs.latest_tag }}
+
+            echo "Changes since $PREVIOUS_TAG:" >> release_notes.md
+
+            echo "" >> release_notes.md
+
+            echo "### Commits" >> release_notes.md
+
+            git log --pretty=format:"* %s" ${PREVIOUS_TAG}..HEAD >> release_notes.md
+
+          fi
+
+          cat release_notes.md
+ 
+      - name: Create GitHub Release
+
+        if: steps.version_check.outputs.version_changed == 'true' && steps.find_app.outputs.app_files != ''
+
+        uses: softprops/action-gh-release@v2
+
+        with:
+
+          name: Release ${{ steps.version_check.outputs.new_tag }}
+
+          tag_name: ${{ steps.version_check.outputs.new_tag }}
+
+          files: ${{ steps.find_app.outputs.app_files }}
+
+          body_path: release_notes.md
+
+          draft: false
+
+        env:
+
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
+      - name: Notify if No App Files Found
+
+        if: steps.version_check.outputs.version_changed == 'true'
+
+        run: |
+          # Ensure required directories exist
+          mkdir -p ./output ./build ./dist ./release_temp
+
+          echo "Searching for .app files in directories: ./output, ./build, ./dist, ."
+
+          APP_COUNT=$(find ./output ./build ./dist . -type f -name "*.app" ! -path "*/node_modules/*" 2>/dev/null | wc -l)
+
+          if [ "$APP_COUNT" -eq "0" ]; then
+            echo "::error::No .app files found to release. Please check your build pipeline or .gitignore settings."
+            echo "Available directories:"
+            ls -R ./output ./build ./dist ./release_temp . || echo "No directories found."
+            exit 1
+          else
+            echo "✅ Found $APP_COUNT .app file(s) for release."
+          fi
