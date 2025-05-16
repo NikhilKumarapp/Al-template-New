@@ -150,6 +150,22 @@ jobs:
 
           echo "✅ Created and pushed new tag: ${{ steps.version_check.outputs.new_tag }}"
  
+      - name: Build AL Project
+        if: steps.version_check.outputs.version_changed == 'true'
+        run: |
+          # Install AL Language extension and build tools if needed
+          # Example for Linux/Ubuntu using Docker (adjust as needed for your setup)
+          # You may need to use a specific Docker image or install .NET and AL compiler
+          # This is a placeholder; adjust for your actual build process
+          echo "Building AL project..."
+          mkdir -p ./output
+          # Example: Use Docker image with AL compiler (replace with your actual build command)
+          # docker run --rm -v $PWD:/workspace bcinsider.azurecr.io/bcsandbox-master:latest /bin/bash -c "cd /workspace && alc /project:./src /packagecachepath:./.alpackages /out:./output/MyApp.app"
+          # Or, if you have alc.exe available:
+          # alc.exe /project:./src /packagecachepath:./.alpackages /out:./output/MyApp.app
+          # For demonstration, we'll just echo (replace this with your real build command)
+          echo "::warning::You must add your AL build command here to generate the .app file."
+
       - name: Zip AL App Files
 
         id: find_app
