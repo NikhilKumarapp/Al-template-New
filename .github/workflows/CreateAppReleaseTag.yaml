@@ -152,19 +152,13 @@ jobs:
  
       - name: Build AL Project
         if: steps.version_check.outputs.version_changed == 'true'
+        shell: pwsh
         run: |
-          # Install AL Language extension and build tools if needed
-          # Example for Linux/Ubuntu using Docker (adjust as needed for your setup)
-          # You may need to use a specific Docker image or install .NET and AL compiler
-          # This is a placeholder; adjust for your actual build process
-          echo "Building AL project..."
-          mkdir -p ./output
-          # Example: Use Docker image with AL compiler (replace with your actual build command)
-          # docker run --rm -v $PWD:/workspace bcinsider.azurecr.io/bcsandbox-master:latest /bin/bash -c "cd /workspace && alc /project:./src /packagecachepath:./.alpackages /out:./output/MyApp.app"
-          # Or, if you have alc.exe available:
-          # alc.exe /project:./src /packagecachepath:./.alpackages /out:./output/MyApp.app
-          # For demonstration, we'll just echo (replace this with your real build command)
-          echo "::warning::You must add your AL build command here to generate the .app file."
+          Write-Host "Building AL project..."
+          mkdir output
+          # Adjust the path to alc.exe as needed
+          & "C:\Program Files (x86)\Microsoft Dynamics 365 Business Central\170\AL Development Environment\alc.exe" `
+            /project:./src /packagecachepath:./.alpackages /out:./output/YourAppName.app
 
       - name: Zip AL App Files
 
