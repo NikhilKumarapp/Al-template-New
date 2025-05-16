@@ -1,0 +1,93 @@
+{
+  "id": "cf5274b9-443f-4914-a0be-942408863132",
+  "name": "Project1",
+  "publisher": "Default Publisher",
+  "version": "1.0.0.0",
+  "platform": "1.0.0.0",
+  "application": "25.0.0.0",
+  "dependencies": [
+    {
+      "id": "D3C551DD-5903-4194-B153-04CED9D29A2C",
+      "name": "India Tax Base",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "1150DD8D-51DA-485A-BD4A-1EE98D78C21A",
+      "name": "Fixed Asset Depreciation for India",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "F1D9B696-156B-4251-B542-34E549FA80E9",
+      "name": "India Voucher Interface",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "07729019-DA51-4639-A987-3DB38CCC62C7",
+      "name": "India Charge Group",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "EAE5779E-7797-4C4C-977E-7516652B7A65",
+      "name": "India TDS",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "EDDCF82E-482C-49D1-836B-AD0284F2C5B0",
+      "name": "India TCS",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "2DC39818-E0F0-42B6-99EB-BA29DC5F4102",
+      "name": "India Gate Entry",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "DB643212-B7FB-4DD4-B5A8-CB44AC714461",
+      "name": "India GST",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "050F6146-BFFD-40DE-942C-D0DD510EC20F",
+      "name": "India Reports",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "7106D701-C601-4A5F-97C2-B8B323AE2C18",
+      "name": "QR Generator",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    },
+    {
+      "id": "68E13FA3-217A-4BE0-9141-99E5BF0CA818",
+      "name": "Email - SMTP Connector",
+      "version": "25.0.23364.25445",
+      "publisher": "Microsoft"
+    }
+  
+  ],
+  "idRanges": [
+    {
+      "from": 50000,
+      "to": 99999
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },
+  "runtime": "14.0",
+  "target": "OnPrem",
+  "features": [
+    "NoImplicitWith"
+  ]
+}
